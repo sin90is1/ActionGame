@@ -5,11 +5,19 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "AbilitySystemInterface.h"
+#include "Abilities/GameplayAbility.h"
+#include "ActionGameTypes.h"
 #include "ActionGameCharacter.generated.h"
 
+class UAG_AbilitySystemComponent;
+class UAG_AttributeSetBase;
+
+class UGameplayEffect;
+class UGameplayAbility;
 
 UCLASS(config=Game)
-class AActionGameCharacter : public ACharacter
+class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -39,9 +47,28 @@ class AActionGameCharacter : public ACharacter
 
 public:
 	AActionGameCharacter();
+
+	virtual void PostInitializeComponents() override;
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	
+	bool ApplyGameplayEffectToSelf(TSubclassOf<UGameplayEffect> Effect, FGameplayEffectContextHandle InEffectContext);
 
 protected:
+
+	void GiveAbilities();
+	void ApplyStartupEffects();
+
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
+
+
+	UPROPERTY(EditDefaultsOnly)
+		UAG_AbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(Transient)
+		UAG_AttributeSetBase* AttributeSet;
+
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -62,5 +89,27 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	//helper Function to work with data
+public:
+	UFUNCTION(BlueprintCallable)
+	FCharacterData GetCharacaterData() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetCharacaterData(const FCharacterData& InCharacterData);
+
+protected:
+
+	UPROPERTY(ReplicatedUsing = OnRep_CharacterData)
+	FCharacterData CharacterData;
+
+	UFUNCTION()
+	void OnRep_CharacterData();
+
+	virtual void InitFromCharacterData(const FCharacterData& InCharacterData, bool bFromReplication = false);
+
+	UPROPERTY(EditDefaultsOnly)
+		class UCharacterDataAsset* CharacterDataAsset;
+
 };
 
