@@ -19,6 +19,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "ActorComponents/AG_CharacterMovementComponent.h"
+#include "ActorComponents/FootstepsComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AActionGameCharacter
@@ -67,6 +68,8 @@ AActionGameCharacter::AActionGameCharacter(const FObjectInitializer& ObjectIniti
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<UAG_AttributeSetBase>(TEXT("AttributeSet"));
+
+	FootstepsComponent = CreateDefaultSubobject<UFootstepsComponent>(TEXT("FootstepsComponent"));
 }
 
 void AActionGameCharacter::PostInitializeComponents()
@@ -231,6 +234,11 @@ void AActionGameCharacter::SetCharacaterData(const FCharacterData& InCharacterDa
 {
 	CharacterData = InCharacterData;
 	InitFromCharacterData(CharacterData);
+}
+
+UFootstepsComponent* AActionGameCharacter::GetFootstepsComponent() const
+{
+	return FootstepsComponent;
 }
 
 void AActionGameCharacter::OnRep_CharacterData()
