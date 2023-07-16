@@ -107,7 +107,7 @@ void AActionGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		//Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::OnJumpAction);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnJumpAction);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		//Moving
@@ -116,6 +116,9 @@ void AActionGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::Look);
 
+		//Crouching
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnCrouchActionStarted);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnCrouchActionEnded);
 	}
 
 }
@@ -131,13 +134,61 @@ void AActionGameCharacter::OnJumpAction()
 }
 
 
+void AActionGameCharacter::OnCrouchActionStarted(const FInputActionValue& Value)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->TryActivateAbilitiesByTag(CrouchTags, true);
+	}
+}
+
+void AActionGameCharacter::OnCrouchActionEnded(const FInputActionValue& Value)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->CancelAbilities(&CrouchTags);
+	}
+}
+
 void AActionGameCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->RemoveActiveEffectsWithTags(InAirTag);
+		AbilitySystemComponent->RemoveActiveEffectsWithTags(InAirTags);
+	}
+}
+
+void AActionGameCharacter::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+
+	if (!CrouchStateEffect.Get()) return;
+
+	if (AbilitySystemComponent)
+	{
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(CrouchStateEffect, 1, EffectContext);
+		if (SpecHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			if (!ActiveGEHandle.WasSuccessfullyApplied())
+			{
+				//ABILITY_LOG(Log, TEXT("Ability %s Failed to apply Crouch effect %s"), *GetName(), *GetNameSafe(CrouchStateEffect));
+			}
+		}
+	}
+}
+
+void AActionGameCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+
+	if (AbilitySystemComponent && CrouchStateEffect.Get())
+	{
+		AbilitySystemComponent->RemoveActiveGameplayEffectBySourceEffect(CrouchStateEffect, AbilitySystemComponent);
 	}
 }
 
