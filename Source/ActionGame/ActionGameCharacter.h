@@ -46,7 +46,10 @@ class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
 	class UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* CrouchAction;
+	class UInputAction* CrouchAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SprintAction;
 
 public:
 
@@ -109,6 +112,8 @@ public:
 
 	class UFootstepsComponent* GetFootstepsComponent() const;
 
+	void OnMaxMovementSpeedChanged(const FOnAttributeChangeData& Data);
+
 protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterData)
@@ -138,6 +143,10 @@ protected:
 
 	void OnCrouchActionEnded(const FInputActionValue& Value);
 
+	void OnSprintActionStarted(const FInputActionValue& Value);
+
+	void OnSprintActionEnded(const FInputActionValue& Value);
+
 	//Gameplay	Tags
 
 protected:
@@ -148,10 +157,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer CrouchTags;
 
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer SprintTags;
 	//Gameplay Effects
 
 protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> CrouchStateEffect;
+
+	//Delegates
+
+protected:
+
+	FDelegateHandle MaxMovementSpeedChangeDelegateHandle;
 };
