@@ -8,6 +8,7 @@
 #include "AbilitySystemInterface.h"
 #include "Abilities/GameplayAbility.h"
 #include "ActionGameTypes.h"
+#include "ActorComponents/AG_MotionWarpingComponent.h"
 #include "ActionGameCharacter.generated.h"
 
 class UAG_AbilitySystemComponent;
@@ -15,6 +16,9 @@ class UAG_AttributeSetBase;
 
 class UGameplayEffect;
 class UGameplayAbility;
+
+class UAG_MotionWarpingComponent;
+class UAG_CharacterMovementComponent;
 
 UCLASS(config=Game)
 class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
@@ -51,6 +55,9 @@ class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* SprintAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* VaultAction;
+
 public:
 
 	AActionGameCharacter(const FObjectInitializer& ObjectInitializer);
@@ -60,6 +67,8 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	
 	bool ApplyGameplayEffectToSelf(TSubclassOf<UGameplayEffect> Effect, FGameplayEffectContextHandle InEffectContext);
+
+	UAG_MotionWarpingComponent* GetAGMotionWarpingComponent() const;
 
 protected:
 
@@ -71,11 +80,15 @@ protected:
 
 
 	UPROPERTY(EditDefaultsOnly)
-		UAG_AbilitySystemComponent* AbilitySystemComponent;
+	UAG_AbilitySystemComponent* AbilitySystemComponent;
 
 	UPROPERTY(Transient)
-		UAG_AttributeSetBase* AttributeSet;
+	UAG_AttributeSetBase* AttributeSet;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = MotionWarp)
+	UAG_MotionWarpingComponent* AGMotionWarpingComponent;
 
+	UAG_CharacterMovementComponent* AGCharacterMovementComponent;
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);

@@ -48,6 +48,8 @@ AActionGameCharacter::AActionGameCharacter(const FObjectInitializer& ObjectIniti
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
+	AGCharacterMovementComponent = Cast<UAG_CharacterMovementComponent>(GetCharacterMovement());
+
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -72,6 +74,8 @@ AActionGameCharacter::AActionGameCharacter(const FObjectInitializer& ObjectIniti
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxMovementSpeedAttribute()).AddUObject(this, &AActionGameCharacter::OnMaxMovementSpeedChanged);
 
 	FootstepsComponent = CreateDefaultSubobject<UFootstepsComponent>(TEXT("FootstepsComponent"));
+
+	AGMotionWarpingComponent = CreateDefaultSubobject<UAG_MotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
 void AActionGameCharacter::PostInitializeComponents()
@@ -109,34 +113,45 @@ void AActionGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		//Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::Move);
+		if (MoveAction)
+		{
+			EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::Move);
+		}
 
 		//Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::Look);
+		if (LookAction)
+		{
+			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::Look);
+		}
 
 		//Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnJumpAction);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		if (JumpAction)
+		{
+			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnJumpAction);
+			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		}
 
 		//Crouching
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnCrouchActionStarted);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnCrouchActionEnded);
+		if (CrouchAction)
+		{
+			EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnCrouchActionStarted);
+			EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnCrouchActionEnded);
+		}
 
 		//Sprinting
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnSprintActionStarted);
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnSprintActionEnded);
+		if (SprintAction)
+		{
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnSprintActionStarted);
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnSprintActionEnded);
+		}
+
 	}
 
 }
 
 void AActionGameCharacter::OnJumpAction()
 {
-	FGameplayEventData Payload;
-
-	Payload.Instigator = this;
-	Payload.EventTag = JumpEventTag;
-
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, JumpEventTag, Payload);
+	AGCharacterMovementComponent->TryTraversal(AbilitySystemComponent);
 }
 
 
@@ -236,6 +251,11 @@ bool AActionGameCharacter::ApplyGameplayEffectToSelf(TSubclassOf<UGameplayEffect
 	return false;
 }
 
+
+UAG_MotionWarpingComponent* AActionGameCharacter::GetAGMotionWarpingComponent() const
+{
+	return AGMotionWarpingComponent;
+}
 
 void AActionGameCharacter::GiveAbilities()
 {
