@@ -19,6 +19,7 @@ class UGameplayAbility;
 
 class UAG_MotionWarpingComponent;
 class UAG_CharacterMovementComponent;
+class UInventoryComponent;
 
 UCLASS(config=Game)
 class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
@@ -56,7 +57,13 @@ class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
 	class UInputAction* SprintAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* VaultAction;
+	class UInputAction* DropItemAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* EquipNextAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* UnequipAction;
 
 public:
 
@@ -120,6 +127,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FCharacterData GetCharacaterData() const;
 
+	UInventoryComponent* GetInventoryComponent() const;
+		;
 	UFUNCTION(BlueprintCallable)
 	void SetCharacaterData(const FCharacterData& InCharacterData);
 
@@ -160,6 +169,13 @@ protected:
 
 	void OnSprintActionEnded(const FInputActionValue& Value);
 
+	void OnDropItemAction(const FInputActionValue& Value);
+
+	void OnEquipNextAction(const FInputActionValue& Value);
+
+	void OnUnequipAction(const FInputActionValue& Value);
+
+
 	//Gameplay	Tags
 
 protected:
@@ -184,4 +200,8 @@ protected:
 protected:
 
 	FDelegateHandle MaxMovementSpeedChangeDelegateHandle;
+
+	//Inventory
+	UPROPERTY(EditAnywhere, Replicated)
+	UInventoryComponent* InventoryComponent = nullptr;
 };

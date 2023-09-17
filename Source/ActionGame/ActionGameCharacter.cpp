@@ -20,6 +20,7 @@
 
 #include "ActorComponents/AG_CharacterMovementComponent.h"
 #include "ActorComponents/FootstepsComponent.h"
+#include "ActorComponents/InventoryComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AActionGameCharacter
@@ -76,6 +77,9 @@ AActionGameCharacter::AActionGameCharacter(const FObjectInitializer& ObjectIniti
 	FootstepsComponent = CreateDefaultSubobject<UFootstepsComponent>(TEXT("FootstepsComponent"));
 
 	AGMotionWarpingComponent = CreateDefaultSubobject<UAG_MotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
 }
 
 void AActionGameCharacter::PostInitializeComponents()
@@ -145,6 +149,24 @@ void AActionGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnSprintActionEnded);
 		}
 
+		//DroppingItem
+		if (DropItemAction)
+		{
+			EnhancedInputComponent->BindAction(DropItemAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnDropItemAction);
+		}
+
+		//EquipNext
+		if (EquipNextAction)
+		{
+			EnhancedInputComponent->BindAction(EquipNextAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnEquipNextAction);
+		}
+
+		//Unequipping
+		if (UnequipAction)
+		{
+			EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnUnequipAction);
+		}
+
 	}
 
 }
@@ -185,6 +207,30 @@ void AActionGameCharacter::OnSprintActionEnded(const FInputActionValue& Value)
 	{
 		AbilitySystemComponent->CancelAbilities(&SprintTags);
 	}
+}
+
+void AActionGameCharacter::OnDropItemAction(const FInputActionValue& Value)
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = UInventoryComponent::DropItemTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::DropItemTag, EventPayload);
+}
+
+void AActionGameCharacter::OnEquipNextAction(const FInputActionValue& Value)
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = UInventoryComponent::EquipNextTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::EquipNextTag, EventPayload);
+}
+
+void AActionGameCharacter::OnUnequipAction(const FInputActionValue& Value)
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = UInventoryComponent::UnequipTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::UnequipTag, EventPayload);
 }
 
 void AActionGameCharacter::Landed(const FHitResult& Hit)
@@ -343,6 +389,11 @@ FCharacterData AActionGameCharacter::GetCharacaterData() const
 	return CharacterData;
 }
 
+UInventoryComponent* AActionGameCharacter::GetInventoryComponent() const
+{
+	return InventoryComponent;
+}
+
 void AActionGameCharacter::SetCharacaterData(const FCharacterData& InCharacterData)
 {
 	CharacterData = InCharacterData;
@@ -374,4 +425,5 @@ void AActionGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AActionGameCharacter, CharacterData);
+	DOREPLIFETIME(AActionGameCharacter, InventoryComponent);
 }

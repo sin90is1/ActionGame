@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "ActionGameTypes.generated.h"
 
+class AItemActor;
+
 USTRUCT(BlueprintType)
 struct FCharacterData
 {
@@ -47,30 +49,35 @@ enum class EFoot : uint8
 	Right UMETA(DisplayName = "Right")
 };
 
-// USTRUCT(BlueprintType)
-// struct FMotionWarpingTargetByLocationAndRotation
-// {
-// 	GENERATED_USTRUCT_BODY();
-// 
-// 	FMotionWarpingTargetByLocationAndRotation()
-// 	{
-// 
-// 	}
-// 
-// 	FMotionWarpingTargetByLocationAndRotation(FName InName, FVector InLocation, FQuat InRotation) 
-// 		: Name(InName)
-// 		, Location(InLocation)
-// 		, Rotation(InRotation)
-// 	{
-// 
-// 	}
-// 
-// 	UPROPERTY()
-// 		FName Name;
-// 
-// 	UPROPERTY()
-// 		FVector Location;
-// 
-// 	UPROPERTY()
-// 		FQuat Rotation;
-// };
+UCLASS(BlueprintType, Blueprintable)
+class UItemStaticData : public UObject
+{
+
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FName Name;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<AItemActor> ItemActorClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FName AttachmentSocket = NAME_None;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool bCanBeEquipped = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FCharacterAnimationData CharacterAnimationData;
+
+};
+
+UENUM(BlueprintType)
+enum EItemState 
+{
+	None UMETA(Displayname = "None"),
+	Equipped UMETA(Displayname = "Equipped"),
+	Dropped UMETA(Displayname = "Dropped")
+};
