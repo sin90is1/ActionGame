@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "ActionGameTypes.h"
+#include "GameplayAbilitySpec.h"
 #include "InventoryItemInstance.generated.h"
 
 /**
@@ -19,7 +20,7 @@ class ACTIONGAME_API UInventoryItemInstance : public UObject
 
 public:
 
-	virtual void init(TSubclassOf<UItemStaticData> InItemStaticDataClass);
+	virtual void Init(TSubclassOf<UItemStaticData> InItemStaticDataClass);
 
 	virtual bool IsSupportedForNetworking() const override { return true; }
 	
@@ -35,12 +36,22 @@ public:
 	UFUNCTION()
 	void OnRep_Equipped();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual void OnEquipped(AActor* InOwner = nullptr);
-	virtual void OnUnequipped();
-	virtual void OnDropped();
+	//because we want to grant and remove abilities we need to have access to our AbilitySystemComponent and we can do that buy having the owner (AActor* InOwner = nullptr)
+	virtual void OnUnequipped(AActor* InOwner = nullptr);
+	virtual void OnDropped(AActor* InOwner = nullptr);
 
 protected:
 	
 	UPROPERTY(Replicated)
 	AItemActor* ItemActor = nullptr;
+
+	void TryGrantAbilities(AActor* InOwner);
+
+	void TryRemoveAbilities(AActor* InOwner);
+
+	UPROPERTY()
+	TArray<FGameplayAbilitySpecHandle> GrantedAbilityHandles;
 };

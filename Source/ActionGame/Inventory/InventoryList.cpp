@@ -8,7 +8,7 @@ void FInventoryList::AddItem(TSubclassOf<UItemStaticData> InItemStaticDataClass)
 {
 	FInventoryListItem& Item = Items.AddDefaulted_GetRef();
 	Item.ItemInstance = NewObject<UInventoryItemInstance>();
-	Item.ItemInstance->init(InItemStaticDataClass);
+	Item.ItemInstance->Init(InItemStaticDataClass);
 	MarkItemDirty(Item);
 }
 

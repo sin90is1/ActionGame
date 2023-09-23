@@ -78,7 +78,7 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerHandleGameplayEvent(FGameplayEventData Payload);
 
-	void BindToNativeTagsEvent();
+/*	void BindToNativeTagsEvent();*/
 
 public:	
 	// Called every frame

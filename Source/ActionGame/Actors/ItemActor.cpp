@@ -19,37 +19,106 @@ AItemActor::AItemActor()
 	bReplicates = true;
 	SetReplicateMovement(true);
 
-	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere Component"));
-	SphereComponent->SetupAttachment(RootComponent);
-	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &AItemActor::OnSphereOverlap);
+	SphereComponent2 = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+	SphereComponent2->SetupAttachment(RootComponent);
+	SphereComponent2->OnComponentBeginOverlap.AddDynamic(this, &AItemActor::OnSphereOverlap);
 
+	// In the constructor
+	UE_LOG(LogTemp, Warning, TEXT("SphereComponent: %s"), *SphereComponent2->GetName());
 }
 
+
+void AItemActor::Init(UInventoryItemInstance* InInstance)
+{
+	ItemInstance = InInstance;
+
+	InitInternal();
+}
+
+// Called when the game starts or when spawned
+// void AItemActor::BeginPlay()
+// {
+// 	Super::BeginPlay();
+// 
+// 	if (HasAuthority())
+// 	{
+// 		if (!IsValid(ItemInstance) && IsValid(ItemStaticDataClass))
+// 		{
+// 			ItemInstance = NewObject<UInventoryItemInstance>();
+// 			ItemInstance->init(ItemStaticDataClass);
+// 
+// 			SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+// 			SphereComponent->SetGenerateOverlapEvents(true);
+// 
+// 			InitInternal();
+// 		}
+// 	}
+// }
+void AItemActor::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (HasAuthority())
+	{
+		if (!IsValid(ItemInstance) && IsValid(ItemStaticDataClass))
+		{
+			ItemInstance = NewObject<UInventoryItemInstance>();
+			ItemInstance->Init(ItemStaticDataClass);
+			if (IsValid(SphereComponent2))
+			{
+				SphereComponent2->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				SphereComponent2->SetGenerateOverlapEvents(true);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("BeginPlay - SphereComponen is NULL"));
+			}
+
+
+			InitInternal();
+		}
+	}
+}
 void AItemActor::OnEquipped()
 {
 	ItemState = EItemState::Equipped;
 
-	SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	SphereComponent->SetGenerateOverlapEvents(false);
-	UE_LOG(LogTemp, Warning, TEXT("AItemActor::OnEquipped: %s"), ItemState);
+
+	if (IsValid(SphereComponent2))
+	{
+		SphereComponent2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		SphereComponent2->SetGenerateOverlapEvents(false);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnEquipped - SphereComponen is NULL"));
+	}
 }
 
 void AItemActor::OnUnEquipped()
 {
 	ItemState = EItemState::None;
 
-	SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	SphereComponent->SetGenerateOverlapEvents(false);
-	UE_LOG(LogTemp, Warning, TEXT("AItemActor::OnUnEquipped: %s"), ItemState);
+	if (IsValid(SphereComponent2))
+	{
+		SphereComponent2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		SphereComponent2->SetGenerateOverlapEvents(false);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnUnEquipped - SphereComponen is NULL"));
+	}
 }
 
 void AItemActor::OnDropped()
 {
-	GetRootComponent()->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 
 	ItemState = EItemState::Dropped;
 
-	if (AActor* ActorOwner = GetOwner()) {
+	GetRootComponent()->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+	if (AActor* ActorOwner = GetOwner()) 
+	{
 		const FVector Location = GetActorLocation();
 		const FVector ForwardVector = ActorOwner->GetActorForwardVector();
 
@@ -78,11 +147,59 @@ void AItemActor::OnDropped()
 		}
 		SetActorLocation(TargetLocation);
 
-		SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		SphereComponent->SetGenerateOverlapEvents(true);
-		UE_LOG(LogTemp, Warning, TEXT("AItemActor::OnDropped: %s"), ItemState);
+
+		if (IsValid(SphereComponent2))
+		{
+			SphereComponent2->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			SphereComponent2->SetGenerateOverlapEvents(true);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("OnDropped - SphereComponen is NULL"));
+		}
 	}
 }
+
+// void AItemActor::OnDropped()
+// {
+// 	ItemState = EItemState::Dropped;
+// 
+// 	GetRootComponent()->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+// 
+// 	if (AActor* ActorOwner = GetOwner())
+// 	{
+// 		const FVector Location = GetActorLocation();
+// 		const FVector Forward = ActorOwner->GetActorForwardVector();
+// 
+// 		const float DropItemDist = 100.f;
+// 		const float DropItemTraceDist = 1000.f;
+// 
+// 		const FVector TraceStart = Location + Forward * DropItemDist;
+// 		const FVector TraceEnd = TraceStart - FVector::UpVector * DropItemTraceDist;
+// 
+// 		TArray<AActor*> ActorsToIgnore = { GetOwner() };
+// 
+// 		FHitResult TraceHit;
+// 
+// 		static const auto CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("ShowDebugInventory"));
+// 		const bool bShowInventory = CVar->GetInt() > 0;
+// 
+// 		FVector TargetLocation = TraceEnd;
+// 
+// 		EDrawDebugTrace::Type DebugDrawType = bShowInventory ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+// 		if (UKismetSystemLibrary::LineTraceSingleByProfile(this, TraceStart, TraceEnd, TEXT("WorldStatic"), true, ActorsToIgnore, DebugDrawType, TraceHit, true))
+// 		{
+// 			if (TraceHit.bBlockingHit)
+// 			{
+// 				TargetLocation = TraceHit.Location;
+// 			}
+// 		}
+// 		SetActorLocation(TargetLocation);
+// 	}
+// 
+// 	SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+// 	SphereComponent->SetGenerateOverlapEvents(true);
+// }
 
 bool AItemActor::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
 {
@@ -94,26 +211,11 @@ bool AItemActor::ReplicateSubobjects(class UActorChannel* Channel, class FOutBun
 }
 
 
-void AItemActor::Init(UInventoryItemInstance* InInstance)
+void AItemActor::OnRep_ItemInstance(UInventoryItemInstance* OldItemInstance)
 {
-	ItemInstance = InInstance;
-}
-
-// Called when the game starts or when spawned
-void AItemActor::BeginPlay()
-{
-	Super::BeginPlay();
-
-	if (HasAuthority())
+	if (IsValid(ItemInstance) && !IsValid(OldItemInstance))
 	{
-		if (!IsValid(ItemInstance)&&IsValid(ItemStaticDataClass))
-		{
-			ItemInstance = NewObject<UInventoryItemInstance>();
-			ItemInstance->init(ItemStaticDataClass);
-
-			SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-			SphereComponent->SetGenerateOverlapEvents(true);
-		}
+		InitInternal();
 	}
 }
 
@@ -121,6 +223,7 @@ void AItemActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 {
 	if (HasAuthority())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("OnSphereOverlapL"));
 		FGameplayEventData EventPayload;
 		EventPayload.Instigator = this;
 		EventPayload.OptionalObject = ItemInstance;
@@ -132,16 +235,41 @@ void AItemActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 
 void AItemActor::OnRep_ItemState()
 {
-	switch (ItemState)
+	if (IsValid(SphereComponent2))
 	{
-	case EItemState::Equipped:
-		SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		SphereComponent->SetGenerateOverlapEvents(false);
-	default:
-		SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		SphereComponent->SetGenerateOverlapEvents(true);
-		break;
+		switch (ItemState)
+		{
+		case EItemState::Equipped:
+			SphereComponent2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			SphereComponent2->SetGenerateOverlapEvents(false);
+			break;
+
+		case EItemState::None:
+			SphereComponent2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			SphereComponent2->SetGenerateOverlapEvents(false);
+			break;
+
+		case EItemState::Dropped:
+			SphereComponent2->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			SphereComponent2->SetGenerateOverlapEvents(true);
+			break;
+
+		default:
+			SphereComponent2->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			SphereComponent2->SetGenerateOverlapEvents(true);
+			break;
+		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnRep_ItemState - SphereComponen is NULL"));
+	}
+	
+}
+
+void AItemActor::InitInternal()
+{
+	//overrided in child class
 }
 
 // Called every frame
@@ -150,7 +278,6 @@ void AItemActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-
 
 void AItemActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
