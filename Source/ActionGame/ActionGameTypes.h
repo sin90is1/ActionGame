@@ -8,6 +8,7 @@
 class AItemActor;
 class UGameplayAbility;
 class UGameplayEffect;
+class UAnimMontage;
 
 USTRUCT(BlueprintType)
 struct FCharacterData
@@ -93,6 +94,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UStaticMesh* StaticMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float ShootingDistance;
 };
 
 UENUM(BlueprintType)

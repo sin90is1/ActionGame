@@ -43,6 +43,9 @@ public:
 	virtual void OnUnequipped(AActor* InOwner = nullptr);
 	virtual void OnDropped(AActor* InOwner = nullptr);
 
+	UFUNCTION(BlueprintPure)
+	AItemActor* GetItemActor() const;
+
 protected:
 	
 	UPROPERTY(Replicated)

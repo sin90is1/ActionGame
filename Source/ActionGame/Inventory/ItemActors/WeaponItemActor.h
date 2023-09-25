@@ -20,6 +20,12 @@ public:
 
 	const UWeaponStaticData* GetWeaponSataticData() const;
 
+	UFUNCTION(BlueprintPure)
+	FVector GetMuzzleLocation() const;
+
+	UFUNCTION(BlueprintPure)
+	float GetShootingDistance() const;
+
 protected:
 
 	//both skeletal mesh and static mesh are derived from MeshComponent so we can use just a MeshComponent variable to  store a pointer to both skeletal mesh and static mesh 

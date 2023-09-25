@@ -65,6 +65,9 @@ class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* UnequipAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* AttackAction;
+
 public:
 
 	AActionGameCharacter(const FObjectInitializer& ObjectInitializer);
@@ -154,9 +157,6 @@ protected:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag JumpEventTag;
-
 	//const FInputActionValue& Value
 	//used landed for ending jump
 	void OnJumpAction();
@@ -175,9 +175,23 @@ protected:
 
 	void OnUnequipAction(const FInputActionValue& Value);
 
+	void OnAttackActionStarted(const FInputActionValue& Value);
+
+	void OnAttackActionEnded(const FInputActionValue& Value);
+
+	//Gameplay Events
+protected:
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag JumpEventTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag AttackStartedEventTag;
+	
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag AttackEndedEventTag;
 
 	//Gameplay	Tags
-
 protected:
 
 	UPROPERTY(EditDefaultsOnly)
@@ -188,15 +202,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer SprintTags;
-	//Gameplay Effects
 
+	
+	//Gameplay Effects
 protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> CrouchStateEffect;
 
 	//Delegates
-
 protected:
 
 	FDelegateHandle MaxMovementSpeedChangeDelegateHandle;

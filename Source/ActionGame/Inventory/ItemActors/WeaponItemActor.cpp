@@ -13,13 +13,19 @@ AWeaponItemActor::AWeaponItemActor()
 
 const UWeaponStaticData* AWeaponItemActor::GetWeaponSataticData() const
 {
-	if (ItemInstance)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AWeaponItemActor::GetWeaponSataticData(): ItemInstance is okay"));
-	}
 	return ItemInstance ? Cast<UWeaponStaticData>(ItemInstance->GetItemsStaticData()) : nullptr;
-
 }
+
+FVector AWeaponItemActor::GetMuzzleLocation() const
+{
+	return MeshComponent ? MeshComponent->GetSocketLocation(TEXT("Muzzle")) : GetActorLocation();
+}
+
+float AWeaponItemActor::GetShootingDistance() const
+{
+	return ItemInstance ? GetWeaponSataticData()->ShootingDistance : 0.0;
+}
+
 
 //we check which skeletal or static property is set to valid and based on that we create a component at runtime and will attach this component to our root component and it will represents our weapon
 //USkeletalMeshComponent will be created in both server and client and replication on this stage is not needed
