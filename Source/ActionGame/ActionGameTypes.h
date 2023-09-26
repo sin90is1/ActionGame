@@ -103,6 +103,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float ShootingDistance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float FireRate;
 };
 
 UENUM(BlueprintType)
