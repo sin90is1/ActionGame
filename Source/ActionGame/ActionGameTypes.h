@@ -77,6 +77,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TArray<TSubclassOf<UGameplayAbility>> GrantedAbilities;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<TSubclassOf<UGameplayEffect>> OnGoingEffects;
 };
 
 UCLASS(BlueprintType, Blueprintable)
@@ -109,3 +112,14 @@ enum EItemState
 	Equipped UMETA(Displayname = "Equipped"),
 	Dropped UMETA(Displayname = "Dropped")
 };
+
+UENUM(BlueprintType)
+enum class EMovementDirectionType : uint8
+{
+	None UMETA(Displayname = "None"),
+	//our default option
+	OrientToMovement UMETA(Displayname = "OrientToMovement"),
+	//character is going to look at the same direction that we are looking
+	Strafe UMETA(Displayname = "Strafe")
+};
+

@@ -28,7 +28,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	TArray<TSubclassOf<UGameplayEffect>> OnGoingEffectsToJustApplyOnStart;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	//UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	TArray<FActiveGameplayEffectHandle> RemoveOnEndEffectHandle;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)

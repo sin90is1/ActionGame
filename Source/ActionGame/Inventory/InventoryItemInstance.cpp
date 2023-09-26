@@ -82,6 +82,9 @@ void UInventoryItemInstance::OnEquipped(AActor* InOwner)
 		}
 	}
 	TryGrantAbilities(InOwner);
+
+	TryApplyEffects(InOwner);
+
 	bEquipped = true;
 }
 
@@ -94,6 +97,9 @@ void UInventoryItemInstance::OnUnequipped(AActor* InOwner)
 	}
 
 	TryRemoveAbilities(InOwner);
+	
+	TryRemoveEffects(InOwner);
+
 	bEquipped = false;
 }
 
@@ -104,6 +110,9 @@ void UInventoryItemInstance::OnDropped(AActor* InOwner)
 		ItemActor->OnDropped();
 	}
 	TryRemoveAbilities(InOwner);
+
+	TryRemoveEffects(InOwner);
+
 	bEquipped = false;
 }
 
@@ -143,6 +152,51 @@ void UInventoryItemInstance::TryRemoveAbilities(AActor* InOwner)
 			//clear cashed abilities handles array
 			GrantedAbilityHandles.Empty();
 		}
+	}
+}
+
+void UInventoryItemInstance::TryApplyEffects(AActor* InOwner)
+{
+	if (UAbilitySystemComponent* AbilityComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InOwner))
+	{
+		const UItemStaticData* ItemStaticData = GetItemsStaticData();
+
+		FGameplayEffectContextHandle EffectContext = AbilityComponent->MakeEffectContext();
+
+		for (auto GameplayEffect : ItemStaticData->OnGoingEffects)
+		{
+			if (!GameplayEffect.Get()) continue;
+
+			FGameplayEffectSpecHandle SpecHandle = AbilityComponent->MakeOutgoingSpec(GameplayEffect, 1, EffectContext);
+			if (SpecHandle.IsValid())
+			{
+				FActiveGameplayEffectHandle ActiveGEHandle = AbilityComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+				if (!ActiveGEHandle.WasSuccessfullyApplied())
+				{
+					//ABILITY_LOG(Log, TEXT("Item %s Failed to apply runtime effect %s"), *GetName(), *GetNameSafe(GameplayEffect));
+				}
+				else
+				{
+					OnGoingEffectHandles.Add(ActiveGEHandle);
+				}
+			}
+		}
+	}
+}
+
+void UInventoryItemInstance::TryRemoveEffects(AActor* InOwner)
+{
+	if (UAbilitySystemComponent* AbilityComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InOwner))
+	{
+		for (FActiveGameplayEffectHandle ActiveEffectHandle : OnGoingEffectHandles)
+		{
+			if (ActiveEffectHandle.IsValid())
+			{
+				AbilityComponent->RemoveActiveGameplayEffect(ActiveEffectHandle);
+			}
+		}
+
+		OnGoingEffectHandles.Empty();
 	}
 }
 

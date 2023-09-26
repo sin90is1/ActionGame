@@ -55,6 +55,12 @@ protected:
 
 	void TryRemoveAbilities(AActor* InOwner);
 
+	void TryApplyEffects(AActor* InOwner);
+
+	void TryRemoveEffects(AActor* InOwner);
+
 	UPROPERTY()
 	TArray<FGameplayAbilitySpecHandle> GrantedAbilityHandles;
+
+	TArray<FActiveGameplayEffectHandle> OnGoingEffectHandles;
 };
