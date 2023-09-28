@@ -18,7 +18,7 @@ public:
 
 	AWeaponItemActor();
 
-	const UWeaponStaticData* GetWeaponSataticData() const;
+	const UWeaponStaticData* GetWeaponStaticData() const;
 
 	UFUNCTION(BlueprintPure)
 	FVector GetMuzzleLocation() const;
@@ -26,7 +26,15 @@ public:
 	UFUNCTION(BlueprintPure)
 	float GetShootingDistance() const;
 
+	UFUNCTION(BlueprintCallable)
+	void PlayWeaponEffects(const FHitResult& InHitResult);
+
 protected:
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlayWeaponEffects(const FHitResult& InHitResult);
+
+	void PlayWeaponEffectsInternal(const FHitResult& InHitResult);
 
 	//both skeletal mesh and static mesh are derived from MeshComponent so we can use just a MeshComponent variable to  store a pointer to both skeletal mesh and static mesh 
 	UPROPERTY()

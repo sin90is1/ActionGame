@@ -99,7 +99,7 @@ public:
 	UStaticMesh* StaticMesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UAnimMontage* AttackMontage;
+	UAnimMontage* AttackMontage; 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float ShootingDistance;
@@ -109,6 +109,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float BaseDamage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USoundBase* AttackSound;
 };
 
 UENUM(BlueprintType)

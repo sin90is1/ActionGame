@@ -6,12 +6,16 @@
 #include "Inventory/InventoryItemInstance.h"
 #include "ActionGameTypes.h"
 
+#include "Kismet/GameplayStatics.h"
+#include "PhysicalMaterial/AG_PhysicalMaterial.h"
+#include "NiagaraFunctionLibrary.h"
+
 AWeaponItemActor::AWeaponItemActor()
 {
 
 }
 
-const UWeaponStaticData* AWeaponItemActor::GetWeaponSataticData() const
+const UWeaponStaticData* AWeaponItemActor::GetWeaponStaticData() const
 {
 	return ItemInstance ? Cast<UWeaponStaticData>(ItemInstance->GetItemsStaticData()) : nullptr;
 }
@@ -23,7 +27,7 @@ FVector AWeaponItemActor::GetMuzzleLocation() const
 
 float AWeaponItemActor::GetShootingDistance() const
 {
-	return ItemInstance ? GetWeaponSataticData()->ShootingDistance : 0.0;
+	return ItemInstance ? GetWeaponStaticData()->ShootingDistance : 0.0;
 }
 
 
@@ -33,7 +37,7 @@ void AWeaponItemActor::InitInternal()
 {
 	Super::InitInternal();
 
-	if (const UWeaponStaticData* WeaponData = GetWeaponSataticData())
+	if (const UWeaponStaticData* WeaponData = GetWeaponStaticData())
 	{
 		if (WeaponData->SkeletatMesh)
 		{
@@ -58,5 +62,45 @@ void AWeaponItemActor::InitInternal()
 				MeshComponent = StaticComp;
 			}
 		}
+	}
+}
+
+void AWeaponItemActor::PlayWeaponEffects(const FHitResult& InHitResult)
+{
+	if (HasAuthority())
+	{
+		MulticastPlayWeaponEffects(InHitResult);
+	}
+	else
+	{
+		PlayWeaponEffectsInternal(InHitResult);
+	}
+}
+
+void AWeaponItemActor::MulticastPlayWeaponEffects_Implementation(const FHitResult& InHitResult)
+{
+	if (!Owner || Owner->GetLocalRole() != ROLE_AutonomousProxy)
+	{
+		PlayWeaponEffectsInternal(InHitResult);
+	}
+}
+
+void AWeaponItemActor::PlayWeaponEffectsInternal(const FHitResult& InHitResult)
+{
+	if (InHitResult.PhysMaterial.Get())
+	{
+		UAG_PhysicalMaterial* PhysicalMaterial = Cast<UAG_PhysicalMaterial>(InHitResult.PhysMaterial.Get());
+
+		if (PhysicalMaterial)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, PhysicalMaterial->PointImpactSound, InHitResult.ImpactPoint);
+
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PhysicalMaterial->PointImpactVFX, InHitResult.ImpactPoint);
+		}
+	}
+
+	if (const UWeaponStaticData* WeaponData = GetWeaponStaticData())
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, WeaponData->AttackSound, GetActorLocation());
 	}
 }
