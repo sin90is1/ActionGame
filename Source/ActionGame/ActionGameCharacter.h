@@ -72,7 +72,7 @@ public:
 
 	AActionGameCharacter(const FObjectInitializer& ObjectInitializer);
 
-	virtual void PostInitializeComponents() override;
+	virtual void PostLoad() override;
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	

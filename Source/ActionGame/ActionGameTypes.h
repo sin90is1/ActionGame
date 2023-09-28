@@ -106,6 +106,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float FireRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float BaseDamage;
 };
 
 UENUM(BlueprintType)
