@@ -142,6 +142,13 @@ public:
 
 	void OnMaxMovementSpeedChanged(const FOnAttributeChangeData& Data);
 
+	//On Health dropped below or equal to zero we send a GameplayEvent to self
+	void OnHealthAttributeChanged(const FOnAttributeChangeData& Data);
+
+	//if we have Ragdoll Tag we will turn into Ragdoll
+	//Ragdoll can be used for death but also for knocking down
+	void StartRagdoll();
+
 protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterData)
@@ -153,10 +160,13 @@ protected:
 	virtual void InitFromCharacterData(const FCharacterData& InCharacterData, bool bFromReplication = false);
 
 	UPROPERTY(EditDefaultsOnly)
-		class UCharacterDataAsset* CharacterDataAsset;
+	class UCharacterDataAsset* CharacterDataAsset;
 
 	UPROPERTY(BlueprintReadOnly)
-		class UFootstepsComponent* FootstepsComponent;
+	class UFootstepsComponent* FootstepsComponent;
+
+	UFUNCTION()
+	void OnRagdollStateTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
 protected:
 
@@ -204,6 +214,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag AimEndedEventTag;
 
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag ZeroHealthEventTag;
+
 	//Gameplay	Tags
 protected:
 
@@ -216,6 +230,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer SprintTags;
 
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag RagdollStateTag;
 	
 	//Gameplay Effects
 protected:

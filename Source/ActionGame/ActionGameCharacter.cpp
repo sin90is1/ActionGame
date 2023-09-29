@@ -22,6 +22,8 @@
 #include "ActorComponents/FootstepsComponent.h"
 #include "ActorComponents/InventoryComponent.h"
 
+#include "GameplayEffectExtension.h"
+
 //////////////////////////////////////////////////////////////////////////
 // AActionGameCharacter
 
@@ -73,6 +75,10 @@ AActionGameCharacter::AActionGameCharacter(const FObjectInitializer& ObjectIniti
 	AttributeSet = CreateDefaultSubobject<UAG_AttributeSetBase>(TEXT("AttributeSet"));
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxMovementSpeedAttribute()).AddUObject(this, &AActionGameCharacter::OnMaxMovementSpeedChanged);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddUObject(this, &AActionGameCharacter::OnHealthAttributeChanged);
+
+	AbilitySystemComponent->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(TEXT("State.Ragdoll")), EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AActionGameCharacter::OnRagdollStateTagChanged);
 
 	FootstepsComponent = CreateDefaultSubobject<UFootstepsComponent>(TEXT("FootstepsComponent"));
 
@@ -182,6 +188,62 @@ void AActionGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 		}
 	}
 
+}
+
+void AActionGameCharacter::OnRagdollStateTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	if (NewCount > 0)
+	{
+		StartRagdoll();
+	}
+}
+
+void AActionGameCharacter::StartRagdoll()
+{
+	USkeletalMeshComponent* SkeletalMesh = GetMesh();
+
+	if (SkeletalMesh && !SkeletalMesh->IsSimulatingPhysics())
+	{
+		SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+		SkeletalMesh->SetSimulatePhysics(true);
+		//we don't want our character be lunched so we disable velocities (Linear and Angular)
+		// to ensure that the character's body starts from a stable position
+		SkeletalMesh->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
+		SkeletalMesh->SetAllPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+
+		//ensures that physics interactions with the character are active when ragdoll physics is initiated.
+		SkeletalMesh->WakeAllRigidBodies();
+
+		//other can collied with us or wind take our corps away
+		//prevent collision interactions with the capsule component while the character is in ragdoll mode,
+		//as ragdolls are typically driven by physics and should not be blocked by capsule collisions
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+
+void AActionGameCharacter::OnHealthAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	if (Data.NewValue <= 0 && Data.OldValue > 0)
+	{
+		AActionGameCharacter* OtherCharacter = nullptr;
+
+		if (Data.GEModData)
+		{
+			//we can extract the "EffectContext" from AttributeChangeEventData that's how you can get what ever you need but most
+			//importantly you can get who applied the Effect to you
+			//you can pass many things to EffectContext like SourceObject, Instigator
+			//just make sure you actually pass something before applying the damage and if you did and you are sure that is the right variable
+			//you can get it and use it in to your state system or giving some benefits for the winning player
+			const FGameplayEffectContextHandle& EffectContext = Data.GEModData->EffectSpec.GetEffectContext();
+			OtherCharacter = Cast<AActionGameCharacter>(EffectContext.GetInstigator());
+		}
+
+		FGameplayEventData EventPayload;
+		EventPayload.EventTag = ZeroHealthEventTag;
+
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, ZeroHealthEventTag, EventPayload);
+	}
 }
 
 void AActionGameCharacter::OnJumpAction()
