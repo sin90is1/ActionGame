@@ -173,6 +173,13 @@ void AActionGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnAttackActionStarted);
 			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnAttackActionEnded);
 		}
+
+		//Aiming
+		if (AimAction)
+		{
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnAimActionStarted);
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnAimActionEnded);
+		}
 	}
 
 }
@@ -253,6 +260,22 @@ void AActionGameCharacter::OnAttackActionEnded(const FInputActionValue& Value)
 	EventPayload.EventTag = AttackEndedEventTag;
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, AttackEndedEventTag, EventPayload);
+}
+
+void AActionGameCharacter::OnAimActionStarted(const FInputActionValue& Value)
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = AimStartedEventTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, AimStartedEventTag, EventPayload);
+}
+
+void AActionGameCharacter::OnAimActionEnded(const FInputActionValue& Value)
+{
+		FGameplayEventData EventPayload;
+	EventPayload.EventTag = AimEndedEventTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, AimEndedEventTag, EventPayload);
 }
 
 void AActionGameCharacter::Landed(const FHitResult& Hit)

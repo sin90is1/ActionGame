@@ -68,6 +68,9 @@ class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* AttackAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* AimAction;
+
 public:
 
 	AActionGameCharacter(const FObjectInitializer& ObjectInitializer);
@@ -179,6 +182,10 @@ protected:
 
 	void OnAttackActionEnded(const FInputActionValue& Value);
 
+	void OnAimActionStarted(const FInputActionValue& Value);
+
+	void OnAimActionEnded(const FInputActionValue& Value);
+
 	//Gameplay Events
 protected:
 
@@ -190,6 +197,12 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag AttackEndedEventTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag AimStartedEventTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag AimEndedEventTag;
 
 	//Gameplay	Tags
 protected:
