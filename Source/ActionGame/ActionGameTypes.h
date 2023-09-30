@@ -9,6 +9,7 @@ class AItemActor;
 class UGameplayAbility;
 class UGameplayEffect;
 class UAnimMontage;
+class UNiagaraSystem;
 
 USTRUCT(BlueprintType)
 struct FCharacterData
@@ -112,6 +113,62 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	USoundBase* AttackSound;
+};
+
+//we are going to work with it same way we are going to work with InventoryItemClass
+UCLASS(BlueprintType, Blueprintable)
+class UProjectileStaticData : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	//apply it in the same way we applied the weapon
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		float BaseDamage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		float DamageRadius;
+
+	/*Projectile movement simulation uses gravity.That's why we're going to also have a property for the gravity multiplayer.
+	For example, if you're going to use a rocket, you might want disabled gravity completely, so setting this to zero. 
+	And if your project are going to be some sort of grenade, you might want to use gravity. So we will parameterize this.*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		float GravityMultiplier;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		float InitialSpeed = 3000.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		float MaxSpeed = 3000.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		UStaticMesh* StaticMesh;
+
+	/*when projectile is going to hit something. We will have to apply the radial damage.
+	For this purpose we will have the array of effects. We will apply these effects to 
+	all the target we will be able to reach using our radial damage.*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		TArray<TSubclassOf<UGameplayEffect>> Effects;
+
+	/*we need few parameters for Tracing, first one will be used for sphere trace to find
+	all the potential targets to apply radial damage.*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		TArray<TEnumAsByte<EObjectTypeQuery>> RadialDamageQueryTypes;
+
+	/*second one is gonna be for linear trace.Because for all the targets we cannot detect in the 
+	sphere,	we will try to check by using the line trace whether they are reachable and if they 
+	are we will try to apply to them are effects*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		TEnumAsByte<ETraceTypeQuery> RadialDamageTraceType;
+
+	/*for visual effects on stop. We also will create the VFX using Niagara system*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		UNiagaraSystem* OnStopVFX = nullptr;
+
+	/*the sound base to play some sound when the projectile explodes.*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		USoundBase* OnStopSFX = nullptr;
+
 };
 
 UENUM(BlueprintType)
